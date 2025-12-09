@@ -1,2 +1,2 @@
-# Claude-Code-God-Mode
-Claude Code God Mode
+# ClaudeFlow
+Smart notifications, permission handling, and complete control for Claude Code.
