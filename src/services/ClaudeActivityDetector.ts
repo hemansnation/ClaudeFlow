@@ -346,8 +346,8 @@ export class ClaudeActivityDetector {
             return true;
         }
 
-        // Check if shell path contains claude
-        const shellPath = terminal.creationOptions?.shellPath;
+        // Check if shell path contains claude (if available)
+        const shellPath = (terminal.creationOptions as any)?.shellPath;
         if (shellPath && shellPath.toLowerCase().includes('claude')) {
             console.log(`ClaudeFlow: Found Claude terminal by shell path: ${shellPath}`);
             return true;
