@@ -37,7 +37,7 @@ export class NotificationManager {
             vscode.window.showWarningMessage(msg, 'Go to Claude Panel').then(selection => {
                 if (selection === 'Go to Claude Panel') {
                     // Optionally bring Claude view to front (if identifiable)
-                    vscode.commands.executeCommand('claudeflow.showActivity');
+                    vscode.window.showInformationMessage('Claude integration - Navigate to Claude panel feature not yet implemented');
                 }
             });
         }

@@ -2,7 +2,7 @@
   "name": "claudeflow",
   "displayName": "ClaudeFlow",
   "description": "Smart notifications, permission handling, and complete control for Claude Code.",
-  "version": "1.0.1",
+  "version": "1.0.3",
   "publisher": "HimanshuRamchandani",
   "repository": {
     "type": "git",
@@ -42,7 +42,27 @@
       },
       {
         "command": "claudeflow.testNotification",
-        "title": "ClaudeFlow: Test Notification"
+        "title": "ClaudeFlow: Test Sound"
+      },
+      {
+        "command": "claudeflow.focusClaude",
+        "title": "ClaudeFlow: Focus Claude"
+      },
+      {
+        "command": "claudeflow.taskComplete",
+        "title": "ClaudeFlow: Simulate Task Complete"
+      },
+      {
+        "command": "claudeflow.taskStart",
+        "title": "ClaudeFlow: Simulate Task Start"
+      },
+      {
+        "command": "claudeflow.testAttention",
+        "title": "ClaudeFlow: Test Attention Required"
+      },
+      {
+        "command": "claudeflow.testActivity",
+        "title": "ClaudeFlow: Test Activity Detection"
       }
     ],
     "configuration": {

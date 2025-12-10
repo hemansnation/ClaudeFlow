@@ -35,38 +35,64 @@ export class SoundPlayer {
 
     // Implementation: choose per-OS strategy
     if (process.platform === 'darwin') {
-      this.playMacSound(soundKey);
+      await this.playMacSound(soundKey);
     } else if (process.platform === 'win32') {
-      this.playWindowsSound(soundKey);
+      await this.playWindowsSound(soundKey);
     } else {
-      this.playLinuxSound(soundKey);
+      await this.playLinuxSound(soundKey);
     }
   }
 
-  private playMacSound(soundKey: string) {
-    const soundFiles: { [key in SoundType]: string } = {
-      'default': '/System/Library/Sounds/Glass.aiff',
-      'ding': '/System/Library/Sounds/Glass.aiff',
-      'chime': '/System/Library/Sounds/Glass.aiff',
-      'bell': '/System/Library/Sounds/Glass.aiff'
-    };
+  private playMacSound(soundKey: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const soundFiles: { [key in SoundType]: string } = {
+        'default': '/System/Library/Sounds/Glass.aiff',
+        'ding': '/System/Library/Sounds/Glass.aiff',
+        'chime': '/System/Library/Sounds/Glass.aiff',
+        'bell': '/System/Library/Sounds/Glass.aiff'
+      };
 
-    const file = soundFiles[soundKey as SoundType] || soundFiles['default'];
-    exec(`afplay "${file}"`, () => {});
+      const file = soundFiles[soundKey as SoundType] || soundFiles['default'];
+      exec(`afplay "${file}"`, (error) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve();
+        }
+      });
+    });
   }
 
-  private playWindowsSound(soundKey: string) {
-    // Simple beep; can be enhanced later
-    const ps = `Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SystemSounds]::Beep.Play()`;
-    exec(`powershell -Command "${ps}"`, () => {});
+  private playWindowsSound(soundKey: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      // Simple beep; can be enhanced later
+      const ps = `Add-Type -AssemblyName System.Windows.Forms; [System.Windows.Forms.SystemSounds]::Beep.Play()`;
+      exec(`powershell -Command "${ps}"`, (error) => {
+        if (error) {
+          reject(error);
+        } else {
+          resolve();
+        }
+      });
+    });
   }
 
-  private playLinuxSound(soundKey: string) {
-    // Try paplay, fallback to beep
-    exec('paplay /usr/share/sounds/freedesktop/stereo/complete.oga', (err: any) => {
-      if (err) {
-        exec('beep', () => {});
-      }
+  private playLinuxSound(soundKey: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      // Try paplay, fallback to beep
+      exec('paplay /usr/share/sounds/freedesktop/stereo/complete.oga', (err: any) => {
+        if (err) {
+          exec('beep', (error2: any) => {
+            if (error2) {
+              reject(error2);
+            } else {
+              resolve();
+            }
+          });
+        } else {
+          resolve();
+        }
+      });
     });
   }
 
