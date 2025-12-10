@@ -27,17 +27,9 @@
     "status tracking"
   ],
   "activationEvents": [
-    "onStartupFinished",
-    "onCommand:claudeflow.testNotification",
-    "onCommand:claudeflow.enableNotifications",
-    "onCommand:claudeflow.disableNotifications",
-    "onCommand:claudeflow.focusClaude",
-    "onCommand:claudeflow.taskComplete",
-    "onCommand:claudeflow.taskStart",
-    "onCommand:claudeflow.testAttention",
-    "onCommand:claudeflow.testActivity"
+    "*"
   ],
-  "main": "./out/extension.js",
+  "main": "./out/extension-minimal.js",
   "contributes": {
     "commands": [
       {
