@@ -29,7 +29,7 @@
   "activationEvents": [
     "*"
   ],
-  "main": "./out/extension-minimal.js",
+  "main": "./out/extension.js",
   "contributes": {
     "commands": [
       {
