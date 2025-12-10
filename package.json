@@ -79,6 +79,14 @@
       {
         "command": "claudeflow.createTestFile",
         "title": "ClaudeFlow: Create Test File (Triggers Detection)"
+      },
+      {
+        "command": "claudeflow.claudeWorking",
+        "title": "ClaudeFlow: Claude Finished Working (Manual Trigger)"
+      },
+      {
+        "command": "claudeflow.claudeNeedsAttention",
+        "title": "ClaudeFlow: Claude Needs Attention (Manual Trigger)"
       }
     ],
     "configuration": {

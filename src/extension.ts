@@ -235,6 +235,30 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
+    // Manual trigger for when you're using Claude - this is the realistic usage
+    const claudeWorkingCommand = vscode.commands.registerCommand('claudeflow.claudeWorking', async () => {
+        try {
+            await soundPlayer.playTaskComplete();
+            vscode.window.showInformationMessage('🎉 ClaudeFlow: Claude finished working!');
+            console.log('ClaudeFlow: Manual Claude completion triggered');
+        } catch (error) {
+            vscode.window.showErrorMessage(`❌ ClaudeFlow: Manual trigger failed - ${error}`);
+            console.error('ClaudeFlow claudeWorking failed:', error);
+        }
+    });
+
+    // Trigger when Claude needs attention
+    const claudeNeedsAttentionCommand = vscode.commands.registerCommand('claudeflow.claudeNeedsAttention', async () => {
+        try {
+            await soundPlayer.playAttentionRequired();
+            vscode.window.showWarningMessage('⚡ ClaudeFlow: Claude needs your attention!');
+            console.log('ClaudeFlow: Manual attention trigger');
+        } catch (error) {
+            vscode.window.showErrorMessage(`❌ ClaudeFlow: Attention trigger failed - ${error}`);
+            console.error('ClaudeFlow claudeNeedsAttention failed:', error);
+        }
+    });
+
     // Configuration change listener
     const configChangeListener = vscode.workspace.onDidChangeConfiguration(event => {
         if (event.affectsConfiguration('claudeflow.enableSounds')) {
@@ -258,6 +282,8 @@ export function activate(context: vscode.ExtensionContext) {
         checkDetectionCommand,
         triggerActivityCommand,
         createTestFileCommand,
+        claudeWorkingCommand,
+        claudeNeedsAttentionCommand,
         configChangeListener
     );
 
