@@ -1,13 +1,16 @@
 import * as vscode from 'vscode';
 import { SoundPlayer } from './services/SoundPlayer';
+import { ClaudeActivityDetector, ClaudeEvent } from './services/ClaudeActivityDetector';
 
 let soundPlayer: SoundPlayer;
+let activityDetector: ClaudeActivityDetector;
 
 export function activate(context: vscode.ExtensionContext) {
     console.log('ClaudeFlow Extension is activating...');
 
-    // Initialize SoundPlayer
+    // Initialize services
     soundPlayer = new SoundPlayer(context);
+    activityDetector = new ClaudeActivityDetector();
 
     // Test sound command
     const testCommand = vscode.commands.registerCommand('claudeflow.testNotification', async () => {
