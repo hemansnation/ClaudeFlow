@@ -196,6 +196,31 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
+    // Create test file to trigger file-based detection
+    const createTestFileCommand = vscode.commands.registerCommand('claudeflow.createTestFile', async () => {
+        try {
+            const fs = require('fs');
+            const path = require('path');
+            const testFilePath = path.join(process.env.HOME || '', '.claude', 'test-activity.txt');
+
+            // Create directory if it doesn't exist
+            const dir = path.dirname(testFilePath);
+            if (!fs.existsSync(dir)) {
+                fs.mkdirSync(dir, { recursive: true });
+            }
+
+            // Write test content that matches Claude patterns
+            const testContent = `Task completed successfully!\nAll done! Here's what I've created.\n${new Date().toISOString()}\n`;
+
+            fs.writeFileSync(testFilePath, testContent);
+            vscode.window.showInformationMessage('📝 ClaudeFlow: Test file created - should trigger detection!');
+            console.log('ClaudeFlow: Test file created at:', testFilePath);
+        } catch (error) {
+            vscode.window.showErrorMessage(`❌ ClaudeFlow: Test file creation failed - ${error}`);
+            console.error('ClaudeFlow createTestFile failed:', error);
+        }
+    });
+
     // Configuration change listener
     const configChangeListener = vscode.workspace.onDidChangeConfiguration(event => {
         if (event.affectsConfiguration('claudeflow.enableSounds')) {
@@ -218,6 +243,7 @@ export function activate(context: vscode.ExtensionContext) {
         testErrorCommand,
         checkDetectionCommand,
         triggerActivityCommand,
+        createTestFileCommand,
         configChangeListener
     );
 

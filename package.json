@@ -75,6 +75,10 @@
       {
         "command": "claudeflow.triggerActivity",
         "title": "ClaudeFlow: Trigger Activity Test"
+      },
+      {
+        "command": "claudeflow.createTestFile",
+        "title": "ClaudeFlow: Create Test File (Triggers Detection)"
       }
     ],
     "configuration": {

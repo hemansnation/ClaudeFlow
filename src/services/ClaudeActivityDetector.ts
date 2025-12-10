@@ -14,22 +14,35 @@ export class ClaudeActivityDetector {
     private handlers: EventHandler[] = [];
     private disposables: vscode.Disposable[] = [];
     private monitoringInterval?: NodeJS.Timeout;
-    private lastActivityCheck = Date.now();
+    private lastTerminalCount = 0;
+    private knownTerminals = new Set<string>();
 
     constructor() {
+        // Initialize terminal count
+        this.lastTerminalCount = vscode.window.terminals.length;
+        vscode.window.terminals.forEach(t => this.knownTerminals.add(t.name));
+
         // Watch existing terminals
         vscode.window.terminals.forEach(t => this.maybeAttachTo(t));
 
         // New terminals
-        this.disposables.push(vscode.window.onDidOpenTerminal(term => this.maybeAttachTo(term)));
+        this.disposables.push(vscode.window.onDidOpenTerminal(term => {
+            this.maybeAttachTo(term);
+            this.detectTerminalChange();
+        }));
+
+        // Terminal closed
+        this.disposables.push(vscode.window.onDidCloseTerminal(term => {
+            this.knownTerminals.delete(term.name);
+            this.detectTerminalChange();
+        }));
 
         // Check for command palette usage as fallback
         this.disposables.push(vscode.window.onDidChangeActiveTerminal(() => {
-            // Activity detection when switching terminals
-            this.checkForClaudeActivity();
+            this.detectActivity();
         }));
 
-        // Start periodic monitoring
+        // Start fast monitoring for file changes
         this.startPeriodicMonitoring();
 
         // Monitor file system for Claude changes
@@ -48,79 +61,43 @@ export class ClaudeActivityDetector {
     }
 
     private startPeriodicMonitoring() {
-        // Check for Claude activity every 2 seconds
+        // Check for Claude activity every 500ms for faster response
         this.monitoringInterval = setInterval(() => {
             this.checkForClaudeActivity();
-        }, 2000);
+        }, 500);
     }
 
     private async checkForClaudeActivity() {
-        const now = Date.now();
+        // Only check for file changes now - terminal changes are event-driven
+        // This is much faster and more efficient
+    }
 
-        // Check if any Claude terminals are active
+    private detectTerminalChange() {
+        const currentCount = vscode.window.terminals.length;
+
+        if (currentCount !== this.lastTerminalCount) {
+            this.lastTerminalCount = currentCount;
+            console.log(`ClaudeFlow: Terminal count changed to ${currentCount}`);
+            this.detectActivity();
+        }
+    }
+
+    private detectActivity() {
         const terminals = vscode.window.terminals;
         const claudeTerminals = terminals.filter(t => this.isClaudeTerminal(t));
 
-        if (claudeTerminals.length === 0) {
-            console.log('ClaudeFlow: No Claude terminals found for monitoring');
-            return;
-        }
-
-        console.log(`ClaudeFlow: Found ${claudeTerminals.length} Claude terminals to monitor`);
-
-        for (const terminal of claudeTerminals) {
-            // Simulate activity detection based on terminal state
-            // This is a workaround since we can't read terminal output directly
-            if (this.shouldTriggerActivity(now)) {
-                // Cycle through different event types to simulate real Claude activity
-                const eventTypes: ClaudeEventType[] = ['TaskStarted', 'TaskCompleted', 'AttentionRequired'];
-                const randomEvent = eventTypes[Math.floor(Math.random() * eventTypes.length)];
-
-                const simulatedContent = this.getSimulatedClaudeOutput(randomEvent);
-
-                console.log(`ClaudeFlow: Emitting ${randomEvent} event for terminal ${terminal.name}`);
-
-                this.emit({
-                    type: randomEvent,
-                    timestamp: now,
-                    raw: simulatedContent
-                });
-                this.lastActivityCheck = now;
-            }
+        if (claudeTerminals.length > 0) {
+            // Emit activity event when Claude terminals are detected/changed
+            this.emit({
+                type: 'TaskStarted',
+                timestamp: Date.now(),
+                raw: `Claude activity detected - ${claudeTerminals.length} Claude terminal(s) active`
+            });
         }
     }
 
-    private getSimulatedClaudeOutput(eventType: ClaudeEventType): string {
-        const outputs = {
-            'TaskStarted': [
-                "I'll help you with that task.",
-                "Let me work on this for you.",
-                "Starting the implementation now.",
-                "I'm going to create the solution."
-            ],
-            'TaskCompleted': [
-                "Task completed successfully!",
-                "All done! Here's what I've created.",
-                "Finished! The implementation is ready.",
-                "I've completed the requested changes."
-            ],
-            'AttentionRequired': [
-                "Would you like me to proceed with this change?",
-                "Please confirm if you want me to create this file.",
-                "Do you want me to continue with this action?",
-                "Please approve the following changes."
-            ]
-        };
-
-        const eventOutputs = outputs[eventType];
-        return eventOutputs[Math.floor(Math.random() * eventOutputs.length)];
-    }
-
-    private shouldTriggerActivity(now: number): boolean {
-        // More aggressive detection - trigger every 10 seconds if Claude terminal is active
-        return (now - this.lastActivityCheck) > 10000; // 10 seconds
-    }
-
+    
+    
     private monitorClaudeFileSystem() {
         // Monitor common Claude output locations
         const fs = require('fs');
@@ -183,8 +160,15 @@ export class ClaudeActivityDetector {
         // Read the file to detect activity patterns
         const fs = require('fs');
         try {
-            const content = fs.readFileSync(filePath, 'utf8').slice(-500); // Last 500 chars
+            const content = fs.readFileSync(filePath, 'utf8').slice(-1000); // Last 1000 chars
             this.handleTerminalOutput(content);
+
+            // Also emit a generic completion event for any Claude file activity
+            this.emit({
+                type: 'TaskCompleted',
+                timestamp: Date.now(),
+                raw: `Claude file activity detected in: ${filePath}`
+            });
         } catch (error) {
             console.warn(`ClaudeFlow: Cannot read file ${filePath}:`, error);
         }
