@@ -144,8 +144,32 @@ export function activate(context: vscode.ExtensionContext) {
 
         if (foundLogs.length > 0) {
             console.log('ClaudeFlow: Found Claude log files:', foundLogs);
+            vscode.window.showInformationMessage(`📁 ClaudeFlow: Monitoring ${foundLogs.length} log file(s)`);
         } else {
             console.log('ClaudeFlow: No Claude log files found for monitoring');
+            vscode.window.showWarningMessage('📁 ClaudeFlow: No Claude log files found - will use periodic monitoring');
+        }
+    });
+
+    // Trigger activity detection manually
+    const triggerActivityCommand = vscode.commands.registerCommand('claudeflow.triggerActivity', async () => {
+        try {
+            // Simulate Claude asking for permission
+            const event: ClaudeEvent = {
+                type: 'AttentionRequired',
+                timestamp: Date.now(),
+                raw: 'Would you like me to create a new file? [Y/n]'
+            };
+
+            activityDetector.emit(event);
+
+            await soundPlayer.playAttentionRequired();
+            vscode.window.showWarningMessage('⚡ ClaudeFlow: Simulated Claude permission request!');
+
+            console.log('ClaudeFlow: Manual activity trigger - attention required');
+        } catch (error) {
+            vscode.window.showErrorMessage(`❌ ClaudeFlow: Activity trigger failed - ${error}`);
+            console.error('ClaudeFlow triggerActivity failed:', error);
         }
     });
 
@@ -170,6 +194,7 @@ export function activate(context: vscode.ExtensionContext) {
         testActivityCommand,
         testErrorCommand,
         checkDetectionCommand,
+        triggerActivityCommand,
         configChangeListener
     );
 

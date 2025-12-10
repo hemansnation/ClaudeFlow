@@ -71,6 +71,10 @@
       {
         "command": "claudeflow.checkDetection",
         "title": "ClaudeFlow: Check Claude Detection"
+      },
+      {
+        "command": "claudeflow.triggerActivity",
+        "title": "ClaudeFlow: Trigger Activity Test"
       }
     ],
     "configuration": {
