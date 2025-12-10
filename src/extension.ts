@@ -13,10 +13,10 @@ export function activate(context: vscode.ExtensionContext) {
     const testCommand = vscode.commands.registerCommand('claudeflow.testNotification', async () => {
         try {
             await soundPlayer.playNotification();
-            vscode.window.showInformationMessage('ClaudeFlow: Test notification sound played!');
+            vscode.window.showInformationMessage('🔔 ClaudeFlow: Sound check complete!');
             console.log('ClaudeFlow testNotification executed with notification sound');
         } catch (error) {
-            vscode.window.showErrorMessage(`ClaudeFlow: Sound test failed: ${error}`);
+            vscode.window.showErrorMessage(`❌ ClaudeFlow: Sound failed - ${error}`);
             console.error('ClaudeFlow testNotification failed:', error);
         }
     });
@@ -25,8 +25,9 @@ export function activate(context: vscode.ExtensionContext) {
     const enableCommand = vscode.commands.registerCommand('claudeflow.enableNotifications', () => {
         const config = vscode.workspace.getConfiguration('claudeflow');
         config.update('enableSounds', true, vscode.ConfigurationTarget.Global);
+        config.update('enableDesktopNotifications', true, vscode.ConfigurationTarget.Global);
         soundPlayer.setEnabled(true);
-        vscode.window.showInformationMessage('ClaudeFlow: Notifications enabled!');
+        vscode.window.showInformationMessage('✅ ClaudeFlow: Notifications activated!');
         console.log('ClaudeFlow enableNotifications executed');
     });
 
@@ -34,8 +35,9 @@ export function activate(context: vscode.ExtensionContext) {
     const disableCommand = vscode.commands.registerCommand('claudeflow.disableNotifications', () => {
         const config = vscode.workspace.getConfiguration('claudeflow');
         config.update('enableSounds', false, vscode.ConfigurationTarget.Global);
+        config.update('enableDesktopNotifications', false, vscode.ConfigurationTarget.Global);
         soundPlayer.setEnabled(false);
-        vscode.window.showInformationMessage('ClaudeFlow: Notifications disabled!');
+        vscode.window.showInformationMessage('🔇 ClaudeFlow: Silent mode on');
         console.log('ClaudeFlow disableNotifications executed');
     });
 
@@ -43,10 +45,10 @@ export function activate(context: vscode.ExtensionContext) {
     const focusCommand = vscode.commands.registerCommand('claudeflow.focusClaude', async () => {
         try {
             await soundPlayer.playAttentionRequired();
-            vscode.window.showInformationMessage('ClaudeFlow: Focus Claude - Attention sound played');
+            vscode.window.showInformationMessage('👀 ClaudeFlow: Claude needs you!');
             console.log('ClaudeFlow focusClaude executed with sound');
         } catch (error) {
-            vscode.window.showErrorMessage(`ClaudeFlow: Focus sound failed: ${error}`);
+            vscode.window.showErrorMessage(`❌ ClaudeFlow: Focus failed - ${error}`);
             console.error('ClaudeFlow focusClaude failed:', error);
         }
     });
@@ -55,17 +57,17 @@ export function activate(context: vscode.ExtensionContext) {
     const taskCompleteCommand = vscode.commands.registerCommand('claudeflow.taskComplete', async () => {
         try {
             await soundPlayer.playTaskComplete();
-            vscode.window.showInformationMessage('ClaudeFlow: Task completed successfully!');
+            vscode.window.showInformationMessage('🎉 ClaudeFlow: Boom! Task crushed it!');
             console.log('ClaudeFlow taskComplete executed with sound');
         } catch (error) {
-            vscode.window.showErrorMessage(`ClaudeFlow: Task complete sound failed: ${error}`);
+            vscode.window.showErrorMessage(`❌ ClaudeFlow: Task sound failed - ${error}`);
             console.error('ClaudeFlow taskComplete failed:', error);
         }
     });
 
     // Task start simulation command
     const taskStartCommand = vscode.commands.registerCommand('claudeflow.taskStart', () => {
-        vscode.window.showInformationMessage('ClaudeFlow: Task started');
+        vscode.window.showInformationMessage('🚀 ClaudeFlow: Claude is on it!');
         console.log('ClaudeFlow taskStart executed');
     });
 
@@ -73,10 +75,10 @@ export function activate(context: vscode.ExtensionContext) {
     const testAttentionCommand = vscode.commands.registerCommand('claudeflow.testAttention', async () => {
         try {
             await soundPlayer.playAttentionRequired();
-            vscode.window.showWarningMessage('ClaudeFlow: Attention required sound played!');
+            vscode.window.showWarningMessage('⚡ ClaudeFlow: Pay attention! Claude needs input');
             console.log('ClaudeFlow testAttention executed with sound');
         } catch (error) {
-            vscode.window.showErrorMessage(`ClaudeFlow: Attention sound failed: ${error}`);
+            vscode.window.showErrorMessage(`❌ ClaudeFlow: Attention sound failed - ${error}`);
             console.error('ClaudeFlow testAttention failed:', error);
         }
     });
@@ -86,10 +88,10 @@ export function activate(context: vscode.ExtensionContext) {
         try {
             // Play task complete sound
             await soundPlayer.playTaskComplete();
-            vscode.window.showInformationMessage('ClaudeFlow: Activity detection test - Task complete sound played');
+            vscode.window.showInformationMessage('🎯 ClaudeFlow: Activity detected! Claude just finished something');
             console.log('ClaudeFlow testActivity executed with sound');
         } catch (error) {
-            vscode.window.showErrorMessage(`ClaudeFlow: Activity test sound failed: ${error}`);
+            vscode.window.showErrorMessage(`❌ ClaudeFlow: Activity test failed - ${error}`);
             console.error('ClaudeFlow testActivity failed:', error);
         }
     });
@@ -98,10 +100,10 @@ export function activate(context: vscode.ExtensionContext) {
     const testErrorCommand = vscode.commands.registerCommand('claudeflow.testError', async () => {
         try {
             await soundPlayer.playError();
-            vscode.window.showErrorMessage('ClaudeFlow: Error sound played!');
+            vscode.window.showErrorMessage('💥 ClaudeFlow: Error sound test!');
             console.log('ClaudeFlow testError executed with error sound');
         } catch (error) {
-            vscode.window.showErrorMessage(`ClaudeFlow: Error sound test failed: ${error}`);
+            vscode.window.showErrorMessage(`❌ ClaudeFlow: Error sound failed - ${error}`);
             console.error('ClaudeFlow testError failed:', error);
         }
     });
@@ -130,7 +132,7 @@ export function activate(context: vscode.ExtensionContext) {
     );
 
     console.log('ClaudeFlow Extension activated successfully!');
-    vscode.window.showInformationMessage('ClaudeFlow Extension Loaded with sound support!');
+    vscode.window.showInformationMessage('🔥 ClaudeFlow: Ready to rock! All systems online');
 }
 
 export function deactivate() {
