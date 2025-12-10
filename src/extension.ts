@@ -108,6 +108,47 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
+    // Check Claude Code detection command
+    const checkDetectionCommand = vscode.commands.registerCommand('claudeflow.checkDetection', () => {
+        const terminals = vscode.window.terminals;
+        const claudeTerminals = terminals.filter(t => {
+            const name = t.name.toLowerCase();
+            return name.includes('claude') || name.includes('claude code') || name.includes('claudeflow');
+        });
+
+        if (claudeTerminals.length > 0) {
+            vscode.window.showInformationMessage(
+                `🔍 ClaudeFlow: Found ${claudeTerminals.length} Claude terminal(s): ${claudeTerminals.map(t => t.name).join(', ')}`
+            );
+            console.log('ClaudeFlow: Claude terminals detected:', claudeTerminals.map(t => t.name));
+        } else {
+            vscode.window.showWarningMessage('🔍 ClaudeFlow: No Claude terminals detected. Open Claude Code to test automatic detection!');
+            console.log('ClaudeFlow: No Claude terminals found');
+        }
+
+        // Check for log files
+        const fs = require('fs');
+        const logPaths = [
+            `${process.env.HOME}/.claude/output.log`,
+            `${process.env.HOME}/.config/claude/logs/claude.log`,
+            '/tmp/claude-output.log'
+        ];
+
+        const foundLogs = logPaths.filter(path => {
+            try {
+                return fs.existsSync(path);
+            } catch {
+                return false;
+            }
+        });
+
+        if (foundLogs.length > 0) {
+            console.log('ClaudeFlow: Found Claude log files:', foundLogs);
+        } else {
+            console.log('ClaudeFlow: No Claude log files found for monitoring');
+        }
+    });
+
     // Configuration change listener
     const configChangeListener = vscode.workspace.onDidChangeConfiguration(event => {
         if (event.affectsConfiguration('claudeflow.enableSounds')) {
@@ -128,6 +169,7 @@ export function activate(context: vscode.ExtensionContext) {
         testAttentionCommand,
         testActivityCommand,
         testErrorCommand,
+        checkDetectionCommand,
         configChangeListener
     );
 

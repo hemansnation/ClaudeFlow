@@ -67,6 +67,10 @@
       {
         "command": "claudeflow.testError",
         "title": "ClaudeFlow: Test Error Sound"
+      },
+      {
+        "command": "claudeflow.checkDetection",
+        "title": "ClaudeFlow: Check Claude Detection"
       }
     ],
     "configuration": {

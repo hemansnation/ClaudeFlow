@@ -43,9 +43,71 @@ export class ClaudeActivityDetector {
     private maybeAttachTo(terminal: vscode.Terminal) {
         if (!this.isClaudeTerminal(terminal)) return;
 
-        // For now, we'll use command simulation since terminal output monitoring
-        // requires a different approach in VS Code extension API
+        // Try to attach to terminal data events if available
+        // Note: This is a limited approach as VS Code extension API
+        // doesn't provide direct terminal output monitoring
+
         console.log(`ClaudeFlow: Attached to terminal "${terminal.name}" for activity detection`);
+
+        // Check if we can use the newer API (VS Code 1.57+)
+        try {
+            // @ts-ignore - This API might not be available in all VS Code versions
+            if (vscode.window.onDidWriteTerminalData) {
+                const disposable = (vscode.window as any).onDidWriteTerminalData((e: any) => {
+                    if (e.terminal === terminal) {
+                        this.handleTerminalOutput(e.data);
+                    }
+                });
+                this.disposables.push(disposable);
+            }
+        } catch (error) {
+            console.warn('ClaudeFlow: Terminal data monitoring not available, falling back to file-based detection');
+            this.setupFileBasedDetection();
+        }
+    }
+
+    private setupFileBasedDetection() {
+        // Try to monitor Claude's output files or logs
+        const claudeOutputPaths = [
+            `${process.env.HOME}/.claude/output.log`,
+            `${process.env.HOME}/.config/claude/logs/`,
+            '/tmp/claude-output.log'
+        ];
+
+        claudeOutputPaths.forEach(path => {
+            if (path.endsWith('.log')) {
+                this.monitorLogFile(path);
+            }
+        });
+    }
+
+    private monitorLogFile(filePath: string) {
+        try {
+            const fs = require('fs');
+            if (fs.existsSync(filePath)) {
+                console.log(`ClaudeFlow: Monitoring Claude log file: ${filePath}`);
+
+                // Simple file monitoring implementation
+                const watcher = fs.watchFile(filePath, (curr: any, prev: any) => {
+                    if (curr.size > prev.size) {
+                        // File grew, read new content
+                        const stream = fs.createReadStream(filePath, { start: prev.size });
+                        let data = '';
+                        stream.on('data', (chunk: any) => {
+                            data += chunk;
+                        });
+                        stream.on('end', () => {
+                            this.handleTerminalOutput(data);
+                        });
+                    }
+                });
+
+                // Store for cleanup
+                this.disposables.push({ dispose: () => fs.unwatchFile(filePath) });
+            }
+        } catch (error) {
+            console.warn(`ClaudeFlow: Cannot monitor log file ${filePath}:`, error);
+        }
     }
 
     private isClaudeTerminal(terminal: vscode.Terminal): boolean {
