@@ -12,9 +12,9 @@ export function activate(context: vscode.ExtensionContext) {
     // Test sound command
     const testCommand = vscode.commands.registerCommand('claudeflow.testNotification', async () => {
         try {
-            await soundPlayer.testSound();
-            vscode.window.showInformationMessage('ClaudeFlow: Test sound played successfully!');
-            console.log('ClaudeFlow testNotification executed with sound');
+            await soundPlayer.playNotification();
+            vscode.window.showInformationMessage('ClaudeFlow: Test notification sound played!');
+            console.log('ClaudeFlow testNotification executed with notification sound');
         } catch (error) {
             vscode.window.showErrorMessage(`ClaudeFlow: Sound test failed: ${error}`);
             console.error('ClaudeFlow testNotification failed:', error);
@@ -94,6 +94,18 @@ export function activate(context: vscode.ExtensionContext) {
         }
     });
 
+    // Test error sound command
+    const testErrorCommand = vscode.commands.registerCommand('claudeflow.testError', async () => {
+        try {
+            await soundPlayer.playError();
+            vscode.window.showErrorMessage('ClaudeFlow: Error sound played!');
+            console.log('ClaudeFlow testError executed with error sound');
+        } catch (error) {
+            vscode.window.showErrorMessage(`ClaudeFlow: Error sound test failed: ${error}`);
+            console.error('ClaudeFlow testError failed:', error);
+        }
+    });
+
     // Configuration change listener
     const configChangeListener = vscode.workspace.onDidChangeConfiguration(event => {
         if (event.affectsConfiguration('claudeflow.enableSounds')) {
@@ -113,6 +125,7 @@ export function activate(context: vscode.ExtensionContext) {
         taskStartCommand,
         testAttentionCommand,
         testActivityCommand,
+        testErrorCommand,
         configChangeListener
     );
 

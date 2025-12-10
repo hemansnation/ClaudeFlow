@@ -26,12 +26,45 @@ export class SoundPlayer {
     await this.playOSSound('attentionRequired');
   }
 
-  private async playOSSound(kind: 'taskComplete' | 'attentionRequired') {
+  async playNotification(): Promise<void> {
+    if (!this.enabled) return;
+    await this.playOSSound('notification');
+  }
+
+  async playError(): Promise<void> {
+    if (!this.enabled) return;
+    await this.playOSSound('error');
+  }
+
+  async playWarning(): Promise<void> {
+    if (!this.enabled) return;
+    await this.playOSSound('warning');
+  }
+
+  private async playOSSound(kind: 'taskComplete' | 'attentionRequired' | 'notification' | 'error' | 'warning') {
     const config = vscode.workspace.getConfiguration('claudeflow');
-    const soundKey =
-      kind === 'taskComplete'
-        ? config.get<string>('taskCompleteSound', 'default')
-        : config.get<string>('attentionSound', 'default');
+
+    // Use specific sound keys for different events
+    let soundKey: string;
+    switch (kind) {
+      case 'taskComplete':
+        soundKey = 'taskComplete';
+        break;
+      case 'attentionRequired':
+        soundKey = 'attentionRequired';
+        break;
+      case 'notification':
+        soundKey = config.get<string>('taskCompleteSound', 'default');
+        break;
+      case 'error':
+        soundKey = 'error';
+        break;
+      case 'warning':
+        soundKey = 'warning';
+        break;
+      default:
+        soundKey = 'default';
+    }
 
     // Implementation: choose per-OS strategy
     if (process.platform === 'darwin') {
@@ -47,13 +80,23 @@ export class SoundPlayer {
     return new Promise((resolve, reject) => {
       const soundFiles: { [key in SoundType]: string } = {
         'default': '/System/Library/Sounds/Glass.aiff',
-        'ding': '/System/Library/Sounds/Glass.aiff',
-        'chime': '/System/Library/Sounds/Glass.aiff',
-        'bell': '/System/Library/Sounds/Glass.aiff'
+        'ding': '/System/Library/Sounds/Ping.aiff',
+        'chime': '/System/Library/Sounds/Hero.aiff',
+        'bell': '/System/Library/Sounds/Tink.aiff'
       };
 
-      const file = soundFiles[soundKey as SoundType] || soundFiles['default'];
-      exec(`afplay "${file}"`, (error) => {
+      // Different sounds for different events
+      const eventSounds: { [key: string]: string } = {
+        'taskComplete': '/System/Library/Sounds/Hero.aiff',      // Success sound
+        'attentionRequired': '/System/Library/Sounds/Ping.aiff', // Attention sound
+        'notification': '/System/Library/Sounds/Glass.aiff',      // General notification
+        'error': '/System/Library/Sounds/Basso.aiff',            // Error sound
+        'warning': '/System/Library/Sounds/Morse.aiff',          // Warning sound
+      };
+
+      let soundFile = eventSounds[soundKey] || soundFiles[soundKey as SoundType] || soundFiles['default'];
+
+      exec(`afplay "${soundFile}"`, (error) => {
         if (error) {
           reject(error);
         } else {
