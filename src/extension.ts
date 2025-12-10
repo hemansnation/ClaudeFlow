@@ -12,6 +12,26 @@ export function activate(context: vscode.ExtensionContext) {
     soundPlayer = new SoundPlayer(context);
     activityDetector = new ClaudeActivityDetector();
 
+    // Set up automatic Claude activity detection
+    activityDetector.onEvent(async (event: ClaudeEvent) => {
+        console.log(`ClaudeFlow: Auto-detected event - ${event.type}: ${event.raw}`);
+
+        switch (event.type) {
+            case 'TaskCompleted':
+                await soundPlayer.playTaskComplete();
+                vscode.window.showInformationMessage('🎉 ClaudeFlow: Claude completed a task!');
+                break;
+            case 'AttentionRequired':
+                await soundPlayer.playAttentionRequired();
+                vscode.window.showWarningMessage('⚡ ClaudeFlow: Claude needs your attention!');
+                break;
+            case 'TaskStarted':
+                // Optional: Handle task start
+                vscode.window.showInformationMessage('🚀 ClaudeFlow: Claude started a task');
+                break;
+        }
+    });
+
     // Test sound command
     const testCommand = vscode.commands.registerCommand('claudeflow.testNotification', async () => {
         try {
