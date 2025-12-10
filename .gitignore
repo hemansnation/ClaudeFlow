@@ -126,7 +126,6 @@ npm-debug.log
 
 # IDE files
 .vscode/settings.json
-.vscode/launch.json
 .vscode/extensions.json
 .idea/
 *.swp
