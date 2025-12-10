@@ -106,15 +106,17 @@ export class ClaudeActivityDetector {
         const watchPaths = [
             path.join(process.env.HOME || '', '.claude'),
             path.join(process.env.HOME || '', '.config', 'claude'),
-            '/tmp',
-            path.join(process.env.TMPDIR || '/tmp', 'claude-*')
+            '/tmp'
         ];
 
         watchPaths.forEach(watchPath => {
             try {
-                if (fs.existsSync(watchPath)) {
-                    this.watchDirectory(watchPath);
+                // Create directory if it doesn't exist
+                if (!fs.existsSync(watchPath)) {
+                    console.log(`ClaudeFlow: Creating directory ${watchPath}`);
+                    fs.mkdirSync(watchPath, { recursive: true });
                 }
+                this.watchDirectory(watchPath);
             } catch (error) {
                 console.warn(`ClaudeFlow: Cannot watch ${watchPath}:`, error);
             }
@@ -126,14 +128,30 @@ export class ClaudeActivityDetector {
         const path = require('path');
 
         try {
+            console.log(`ClaudeFlow: Starting to watch directory: ${dirPath}`);
+
+            // Watch the entire directory for any file changes
+            fs.watch(dirPath, (eventType: string, filename: string) => {
+                if (filename) {
+                    const fullPath = path.join(dirPath, filename);
+                    console.log(`ClaudeFlow: File event ${eventType} on ${fullPath}`);
+
+                    // Check if it's a Claude-related file or contains Claude patterns
+                    if (this.isClaudeFile(filename)) {
+                        setTimeout(() => {
+                            this.handleFileChange(fullPath);
+                        }, 100); // Small delay to ensure file write is complete
+                    }
+                }
+            });
+
+            // Also watch existing files
             fs.readdir(dirPath, (err: any, files: string[]) => {
                 if (err) return;
 
                 files.forEach(file => {
                     const fullPath = path.join(dirPath, file);
-
-                    // Watch for changes in Claude-related files
-                    if (this.isClaudeFile(file)) {
+                    if (this.isClaudeFile(file) && fs.existsSync(fullPath)) {
                         fs.watchFile(fullPath, (curr: any, prev: any) => {
                             if (curr.mtime > prev.mtime) {
                                 this.handleFileChange(fullPath);
@@ -160,17 +178,26 @@ export class ClaudeActivityDetector {
         // Read the file to detect activity patterns
         const fs = require('fs');
         try {
+            if (!fs.existsSync(filePath)) {
+                console.log(`ClaudeFlow: File ${filePath} no longer exists`);
+                return;
+            }
+
             const content = fs.readFileSync(filePath, 'utf8').slice(-1000); // Last 1000 chars
+            console.log(`ClaudeFlow: File content preview: ${content.substring(0, 100)}...`);
+
+            // Check for activity patterns
             this.handleTerminalOutput(content);
 
-            // Also emit a generic completion event for any Claude file activity
+            // Always emit a completion event for any Claude file activity
+            console.log(`ClaudeFlow: Emitting TaskCompleted event for file: ${filePath}`);
             this.emit({
                 type: 'TaskCompleted',
                 timestamp: Date.now(),
                 raw: `Claude file activity detected in: ${filePath}`
             });
         } catch (error) {
-            console.warn(`ClaudeFlow: Cannot read file ${filePath}:`, error);
+            console.error(`ClaudeFlow: Cannot read file ${filePath}:`, error);
         }
     }
 

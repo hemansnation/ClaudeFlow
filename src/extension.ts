@@ -14,19 +14,33 @@ export function activate(context: vscode.ExtensionContext) {
 
     // Set up automatic Claude activity detection
     activityDetector.onEvent(async (event: ClaudeEvent) => {
-        console.log(`ClaudeFlow: Auto-detected event - ${event.type}: ${event.raw}`);
+        console.log(`🎯 ClaudeFlow: EVENT RECEIVED - ${event.type}: ${event.raw}`);
 
         switch (event.type) {
             case 'TaskCompleted':
-                await soundPlayer.playTaskComplete();
-                vscode.window.showInformationMessage('🎉 ClaudeFlow: Claude completed a task!');
+                console.log('🔊 ClaudeFlow: Playing task complete sound');
+                try {
+                    await soundPlayer.playTaskComplete();
+                    vscode.window.showInformationMessage('🎉 ClaudeFlow: Claude completed a task!');
+                    console.log('✅ ClaudeFlow: Task complete notification sent successfully');
+                } catch (soundError) {
+                    console.error('❌ ClaudeFlow: Sound playback failed:', soundError);
+                    vscode.window.showErrorMessage(`❌ Sound failed: ${soundError}`);
+                }
                 break;
             case 'AttentionRequired':
-                await soundPlayer.playAttentionRequired();
-                vscode.window.showWarningMessage('⚡ ClaudeFlow: Claude needs your attention!');
+                console.log('🔊 ClaudeFlow: Playing attention required sound');
+                try {
+                    await soundPlayer.playAttentionRequired();
+                    vscode.window.showWarningMessage('⚡ ClaudeFlow: Claude needs your attention!');
+                    console.log('✅ ClaudeFlow: Attention notification sent successfully');
+                } catch (soundError) {
+                    console.error('❌ ClaudeFlow: Attention sound failed:', soundError);
+                    vscode.window.showErrorMessage(`❌ Attention sound failed: ${soundError}`);
+                }
                 break;
             case 'TaskStarted':
-                // Optional: Handle task start
+                console.log('📢 ClaudeFlow: Task started event');
                 vscode.window.showInformationMessage('🚀 ClaudeFlow: Claude started a task');
                 break;
         }
