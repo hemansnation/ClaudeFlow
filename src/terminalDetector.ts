@@ -4,6 +4,10 @@ import { claudeEventBus } from './eventBus';
 export class TerminalDetector {
     private disposables: vscode.Disposable[] = [];
     private activeClaudeTerminals = new Set<vscode.Terminal>();
+    private lastExitTime = new Map<string, number>(); // Track exit sounds per terminal
+    private lastStartupTime = new Map<string, number>(); // Track startup sounds per terminal
+    private readonly EXIT_COOLDOWN = 5000; // 5 seconds cooldown between exit sounds
+    private readonly STARTUP_COOLDOWN = 10000; // 10 seconds cooldown between startup sounds
 
     constructor() {
         this.setupTerminalListeners();
@@ -17,19 +21,8 @@ export class TerminalDetector {
             })
         );
 
-        // Monitor terminal data (text output) - requires VS Code 1.74+
-        if ('onDidWriteTerminalData' in vscode.window) {
-            // @ts-ignore - API exists at runtime but not in types
-            this.disposables.push(
-                (vscode.window as any).onDidWriteTerminalData((e: any) => {
-                    if (this.isClaudeTerminal(e.terminal)) {
-                        this.analyzeTerminalOutput(e.terminal, e.data);
-                    }
-                })
-            );
-        } else {
-            console.warn('VS Code version does not support terminal output monitoring');
-        }
+        // Note: Terminal monitoring requires VS Code API proposal
+        // For production release, we'll detect by terminal name instead
 
         // Check existing terminals on activation
         vscode.window.terminals.forEach(terminal => {
@@ -81,72 +74,92 @@ export class TerminalDetector {
     private analyzeTerminalOutput(terminal: vscode.Terminal, data: string): void {
         const output = data.toString();
 
-        // Task started patterns
-        const taskStartedPatterns = [
-            /^✓ /m,
-            /^▶ /m,
-            /Starting task/i,
-            /Beginning/i,
-            /Running/i
-        ];
+        // Only check for complete commands (with newlines) to avoid triggering on keystrokes
+        if (!output.includes('\n')) {
+            return; // Ignore partial input/keystrokes
+        }
 
-        // Task completed patterns
-        const taskCompletedPatterns = [
-            /✓ Task completed/i,
-            /✨ Done/i,
-            /Completed successfully/i,
-            /Task finished/i,
-            /All set/i
-        ];
+        // Detect claude startup - only when claude is at the beginning of a line followed by space/newline
+        const claudeStartPattern = /^claude\s*$/m;
+        const claudeWithArgsPattern = /^claude\s+/m;
 
-        // User attention required patterns
-        const attentionPatterns = [
-            /\?/m,
-            /Permission required/i,
-            /Please confirm/i,
-            /Need input/i,
-            /Waiting for user/i,
-            /Press Enter to continue/i,
-            /Continue\?/i
-        ];
-
-        // Claude idle patterns
-        const idlePatterns = [
-            /I'm ready/i,
-            /What would you like/i,
-            /How can I help/i,
-            /Waiting for your next instruction/i
-        ];
-
-        // Analyze for task started
-        if (taskStartedPatterns.some(pattern => pattern.test(output))) {
+        if (claudeStartPattern.test(output.trim()) || claudeWithArgsPattern.test(output.trim())) {
             claudeEventBus.emitTaskStarted('terminal', {
                 terminalName: terminal.name,
-                output: output.trim()
+                output: output.trim(),
+                reason: 'claude_command_detected'
             });
+            return;
         }
 
-        // Analyze for task completed
-        if (taskCompletedPatterns.some(pattern => pattern.test(output))) {
-            claudeEventBus.emitTaskCompleted('terminal', {
-                terminalName: terminal.name,
-                output: output.trim()
-            });
+        // Detect claude exit patterns
+        const exitPatterns = [
+            /exit\s*$/m,                    // "exit" command
+            /quit\s*$/m,                    // "quit" command
+            /\x04/,                         // Ctrl+D (EOF character)
+            /Bye!/i,                        // Claude's actual goodbye message
+            /Goodbye/i,                     // Claude's goodbye message
+            /Session ended/i,               // Claude session end
+            /Total cost:/i,                 // Session summary (appears at exit)
+            /Total duration/i,              // Session summary (appears at exit)
+            /Usage:/i,                      // Session summary (appears at exit)
+        ];
+
+        if (exitPatterns.some(pattern => pattern.test(output))) {
+            // Check cooldown to prevent multiple exit sounds
+            const terminalKey = `${terminal.name}_terminal`;
+            const now = Date.now();
+            const lastExit = this.lastExitTime.get(terminalKey) || 0;
+
+            if (now - lastExit > this.EXIT_COOLDOWN) {
+                this.lastExitTime.set(terminalKey, now);
+                claudeEventBus.emitTaskCompleted('terminal', {
+                    terminalName: terminal.name,
+                    output: output.trim(),
+                    reason: 'claude_exit_detected'
+                });
+            }
+            return;
         }
 
-        // Analyze for user attention required
-        if (attentionPatterns.some(pattern => pattern.test(output))) {
+        // Detect permission/confirmation request patterns
+        const permissionPatterns = [
+            /\?\s*$/m,                                   // Question at end of line
+            /\by\/n\b/i,                                // "y/n" confirmation
+            /\byes\/no\b/i,                             // "yes/no" confirmation
+            /\[y\/n\]/i,                               // [y/n] prompt
+            /\[yes\/no\]/i,                             // [yes/no] prompt
+            /\(y\/n\)/i,                               // (y/n) prompt
+            /continue\?/i,                              // "continue?" prompt
+            /proceed\?/i,                               // "proceed?" prompt
+            /allow\?/i,                                 // "allow?" prompt
+            /confirm\?/i,                               // "confirm?" prompt
+            /permission required/i,                     // "permission required"
+            /access granted/i,                          // "access granted" (after permission)
+            /allow this action/i,                       // "allow this action"
+            /do you want to/i,                          // "do you want to" questions
+            /are you sure/i,                            // "are you sure" confirmation
+            /is this ok/i,                              // "is this ok" confirmation
+        ];
+
+        if (permissionPatterns.some(pattern => pattern.test(output))) {
             claudeEventBus.emitUserAttentionRequired('terminal', {
                 terminalName: terminal.name,
-                output: output.trim()
+                output: output.trim(),
+                reason: 'permission_request_detected'
             });
+            return;
         }
 
-        // Analyze for Claude idle
-        if (idlePatterns.some(pattern => pattern.test(output))) {
-            claudeEventBus.emitClaudeIdle('terminal', {
+        // Also check if terminal name contains "claude" (for when claude creates its own terminal)
+        const terminalIsClaude = terminal.name.toLowerCase().includes('claude');
+
+        if (terminalIsClaude && !this.isClaudeTerminal(terminal)) {
+            this.activeClaudeTerminals.add(terminal);
+            claudeEventBus.emitTaskStarted('terminal', {
                 terminalName: terminal.name,
-                output: output.trim()
+                output: output.trim(),
+                reason: 'claude_terminal_name'
             });
         }
     }

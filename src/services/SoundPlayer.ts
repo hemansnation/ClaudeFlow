@@ -41,6 +41,25 @@ export class SoundPlayer {
     await this.playOSSound('warning');
   }
 
+  async playPermission(): Promise<void> {
+    if (!this.enabled) return;
+    // Use a more noticeable sound for permission requests
+    await this.playMacOSSpecific('/System/Library/Sounds/Glass.aiff');
+  }
+
+  private async playMacOSSpecific(soundFile: string): Promise<void> {
+    return new Promise((resolve, reject) => {
+      const command = `/usr/bin/afplay "${soundFile}"`;
+      exec(command, (error, stdout, stderr) => {
+        if (error) {
+          this.playSystemBeep().then(resolve).catch(reject);
+        } else {
+          resolve();
+        }
+      });
+    });
+  }
+
   private async playOSSound(kind: 'taskComplete' | 'attentionRequired' | 'notification' | 'error' | 'warning') {
     const config = vscode.workspace.getConfiguration('claudeflow');
 
@@ -96,12 +115,21 @@ export class SoundPlayer {
 
       let soundFile = eventSounds[soundKey] || soundFiles[soundKey as SoundType] || soundFiles['default'];
 
-      exec(`afplay "${soundFile}"`, (error) => {
+      const command = `/usr/bin/afplay "${soundFile}"`;
+      exec(command, (error, stdout, stderr) => {
         if (error) {
-          reject(error);
+          this.playSystemBeep().then(resolve).catch(reject);
         } else {
           resolve();
         }
+      });
+    });
+  }
+
+  private async playSystemBeep(): Promise<void> {
+    return new Promise((resolve) => {
+      exec('/usr/bin/afplay /System/Library/Sounds/Ping.aiff', (error) => {
+        resolve(); // Always resolve to avoid hanging
       });
     });
   }

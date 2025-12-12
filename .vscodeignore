@@ -8,3 +8,14 @@ vsc-extension-quickstart.md
 **/.eslintrc.json
 **/*.map
 **/*.ts
+**/*.test.js
+**/*.spec.js
+test-*.js
+package-lock.json
+yarn.lock
+.DS_Store
+*.log
+coverage/
+.nyc_output/
+**/node_modules/**
+out/src/

@@ -61,10 +61,28 @@ export class OutputPatternDetector {
                 description: 'Claude asks a question'
             },
             {
+                name: 'y-n-confirmation',
+                pattern: /\b(y\/n|yes\/no)\b/i,
+                eventType: 'userAttentionRequired',
+                description: 'Claude requests y/n confirmation'
+            },
+            {
+                name: 'confirmation-prompt',
+                pattern: /\b(continue\?|proceed\?|allow\?|confirm\?)\b/i,
+                eventType: 'userAttentionRequired',
+                description: 'Claude requests confirmation'
+            },
+            {
                 name: 'user-input-needed',
                 pattern: /(Waiting for|Need|Please provide) (input|response|answer)/i,
                 eventType: 'userAttentionRequired',
                 description: 'Claude waits for user input'
+            },
+            {
+                name: 'sure-confirmation',
+                pattern: /\b(are you sure|is this ok|do you want to)\b/i,
+                eventType: 'userAttentionRequired',
+                description: 'Claude requests sure confirmation'
             },
 
             // Claude Idle Patterns
@@ -84,7 +102,7 @@ export class OutputPatternDetector {
     }
 
     private setupOutputChannelListeners(): void {
-        // Monitor integrated terminal output - requires VS Code 1.74+
+        // Monitor integrated terminal output - requires VS Code 1.74+ and API proposal
         if ('onDidWriteTerminalData' in vscode.window) {
             // @ts-ignore - API exists at runtime but not in types
             this.disposables.push(

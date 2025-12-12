@@ -1,8 +1,8 @@
 {
   "name": "claudeflow",
   "displayName": "ClaudeFlow",
-  "description": "Smart notifications, permission handling, and complete control for Claude Code.",
-  "version": "1.0.3",
+  "description": "Sound notifications for Claude Code - plays sounds when Claude starts, exits, or asks for permission.",
+  "version": "1.1.0",
   "publisher": "HimanshuRamchandani",
   "repository": {
     "type": "git",
@@ -21,10 +21,10 @@
   "keywords": [
     "claude",
     "claude code",
-    "notifications",
+    "sound notifications",
     "productivity",
     "ai assistant",
-    "status tracking"
+    "terminal"
   ],
   "activationEvents": [
     "*"
@@ -33,138 +33,17 @@
   "contributes": {
     "commands": [
       {
-        "command": "claudeflow.enableNotifications",
-        "title": "ClaudeFlow: Enable Notifications"
-      },
-      {
-        "command": "claudeflow.disableNotifications",
-        "title": "ClaudeFlow: Disable Notifications"
-      },
-      {
-        "command": "claudeflow.testNotification",
+        "command": "claudeflow.testSound",
         "title": "ClaudeFlow: Test Sound"
-      },
-      {
-        "command": "claudeflow.focusClaude",
-        "title": "ClaudeFlow: Focus Claude"
-      },
-      {
-        "command": "claudeflow.taskComplete",
-        "title": "ClaudeFlow: Simulate Task Complete"
-      },
-      {
-        "command": "claudeflow.taskStart",
-        "title": "ClaudeFlow: Simulate Task Start"
-      },
-      {
-        "command": "claudeflow.testAttention",
-        "title": "ClaudeFlow: Test Attention Required"
-      },
-      {
-        "command": "claudeflow.testActivity",
-        "title": "ClaudeFlow: Test Activity Detection"
-      },
-      {
-        "command": "claudeflow.testError",
-        "title": "ClaudeFlow: Test Error Sound"
-      },
-      {
-        "command": "claudeflow.checkDetection",
-        "title": "ClaudeFlow: Check Claude Detection"
-      },
-      {
-        "command": "claudeflow.triggerActivity",
-        "title": "ClaudeFlow: Trigger Activity Test"
-      },
-      {
-        "command": "claudeflow.createTestFile",
-        "title": "ClaudeFlow: Create Test File (Triggers Detection)"
-      },
-      {
-        "command": "claudeflow.claudeWorking",
-        "title": "ClaudeFlow: Claude Finished Working (Manual Trigger)"
-      },
-      {
-        "command": "claudeflow.claudeNeedsAttention",
-        "title": "ClaudeFlow: Claude Needs Attention (Manual Trigger)"
       }
     ],
     "configuration": {
       "title": "ClaudeFlow",
       "properties": {
-        "claudeflow.enableDesktopNotifications": {
-          "type": "boolean",
-          "default": true,
-          "description": "Enable ClaudeFlow desktop notifications"
-        },
-        "claudeflow.showTaskCompletePopup": {
-          "type": "boolean",
-          "default": true,
-          "description": "Show popup when Claude completes a task"
-        },
-        "claudeflow.showAttentionPopup": {
-          "type": "boolean",
-          "default": true,
-          "description": "Show popup when Claude needs attention"
-        },
         "claudeflow.enableSounds": {
           "type": "boolean",
           "default": true,
-          "description": "Enable sound notifications"
-        },
-        "claudeflow.taskCompleteSound": {
-          "type": "string",
-          "enum": [
-            "default",
-            "ding",
-            "chime",
-            "bell"
-          ],
-          "default": "default",
-          "description": "Sound to play when Claude completes a task"
-        },
-        "claudeflow.attentionSound": {
-          "type": "string",
-          "enum": [
-            "default",
-            "ding",
-            "chime",
-            "bell"
-          ],
-          "default": "default",
-          "description": "Sound to play when Claude needs attention"
-        },
-        "claudeflow.soundVolume": {
-          "type": "number",
-          "default": 1,
-          "minimum": 0,
-          "maximum": 1,
-          "description": "Sound volume level (0.0 to 1.0)"
-        },
-        "claudeflow.permissionHistorySize": {
-          "type": "number",
-          "default": 100,
-          "description": "Maximum number of permission requests to keep in history"
-        },
-        "claudeflow.notificationHistorySize": {
-          "type": "number",
-          "default": 50,
-          "description": "Maximum number of notifications to keep in history"
-        },
-        "claudeflow.eventHistorySize": {
-          "type": "number",
-          "default": 500,
-          "description": "Maximum number of events to keep in history"
-        },
-        "claudeflow.hooks.enabled": {
-          "type": "boolean",
-          "default": false,
-          "description": "Enable file-based Claude hooks detection"
-        },
-        "claudeflow.hooks.filePath": {
-          "type": "string",
-          "default": "",
-          "description": "Path to Claude hooks JSON file (relative or absolute)"
+          "description": "Enable sound notifications for Claude Code activity"
         }
       }
     }
@@ -179,22 +58,5 @@
     "@types/vscode": "^1.106.1",
     "typescript": "^5.9.3"
   },
-  "marketing": {
-    "gallery": {
-      "screenshots": [],
-      "features": [
-        "🔔 Smart notifications for Claude Code task completion",
-        "🔊 Cross-platform sound notifications (macOS, Windows, Linux)",
-        "📊 Real-time status tracking in VS Code status bar",
-        "⚙️ Fully configurable notification preferences",
-        "🔗 Optional file-based hooks integration",
-        "🚀 Lightweight and performant - no startup delays"
-      ]
-    }
-  },
-  "qna": "marketplace",
-  "icon": "resources/icon.png",
-  "dependencies": {
-    "@vscode/vsce": "^2.32.0"
-  }
+  "icon": "resources/icon.png"
 }
